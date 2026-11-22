@@ -65,3 +65,13 @@ jobs:
           name: relatorios-testes-api
           path: reports/
           if-no-files-found: warn
+      
+      - name: Executar testes de tipos inválidos
+        if: success() || failure()
+        run: |
+          npx newman run postman-api-automation-tests.postman_collection.json \
+            --folder "Cadastro com tipo de dado inválido" \
+            --iteration-data dados-tipos-invalidos.json \
+            -r cli,htmlextra \
+            --reporter-htmlextra-export reports/tipos-invalidos.html
+
