@@ -207,6 +207,308 @@
             }
           },
           "response": []
+        },
+        {
+          "name": "Consultar usuário inexistente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "",
+                  "pm.test(\"CT36 - Retornar 400 para usuário inexistente\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"CT37 - Validar mensagem de usuário não encontrado\", function () {",
+                  "    const response = pm.response.json();",
+                  "",
+                  "    pm.expect(response.message).to.eql(",
+                  "        \"Usuário não encontrado\"",
+                  "    );",
+                  "});",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://serverest.dev/usuarios/ID_INEXISTENTE_123",
+              "protocol": "https",
+              "host": [
+                "serverest",
+                "dev"
+              ],
+              "path": [
+                "usuarios",
+                "ID_INEXISTENTE_123"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Consultar usuário com ID inválido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "",
+                  "pm.test(\"CT38 - Retornar 400 para ID inválido\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"CT39 - Validar mensagem de formato inválido\", function () {",
+                  "    const response = pm.response.json();",
+                  "",
+                  "    pm.expect(response.id).to.eql(",
+                  "        \"id deve ter exatamente 16 caracteres alfanuméricos\"",
+                  "    );",
+                  "});",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://serverest.dev/usuarios/ID_INVALIDO",
+              "protocol": "https",
+              "host": [
+                "serverest",
+                "dev"
+              ],
+              "path": [
+                "usuarios",
+                "ID_INVALIDO"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Atualizar usuário inexistente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "",
+                  "pm.test(\"CT40 - Criar usuário quando ID não existe\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"CT41 - Validar cadastro realizado\", function () {",
+                  "    const response = pm.response.json();",
+                  "",
+                  "    pm.expect(response.message).to.eql(\"Cadastro realizado com sucesso\");",
+                  "    pm.expect(response._id).to.be.a(\"string\");",
+                  "});",
+                  "",
+                  "// Excluir o usuário criado durante o teste",
+                  "const userId = pm.response.json()._id;",
+                  "",
+                  "if (pm.response.code === 201 && userId) {",
+                  "    pm.sendRequest({",
+                  "        url: `https://serverest.dev/usuarios/${userId}`,",
+                  "        method: \"DELETE\"",
+                  "    }, function (err, res) {",
+                  "        pm.test(\"CT42 - Excluir usuário criado no teste\", function () {",
+                  "            pm.expect(err).to.be.null;",
+                  "            pm.expect(res.code).to.eql(200);",
+                  "        });",
+                  "    });",
+                  "}",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "",
+                  "const email = `qa.put.${Date.now()}@example.com`;",
+                  "",
+                  "pm.variables.set(\"emailPUT\", email);",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Usuario Teste QA\",\n  \"email\": \"{{emailPUT}}\",\n  \"password\": \"Teste@123\",\n  \"administrador\": \"true\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://serverest.dev/usuarios/1234567890ABCDEF",
+              "protocol": "https",
+              "host": [
+                "serverest",
+                "dev"
+              ],
+              "path": [
+                "usuarios",
+                "1234567890ABCDEF"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Excluir usuário inexistente.",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "",
+                  "pm.test(\"CT43 - Retornar 200 ao excluir usuário inexistente\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"CT44 - Validar que nenhum registro foi excluído\", function () {",
+                  "    const response = pm.response.json();",
+                  "",
+                  "    pm.expect(response.message).to.eql(\"Nenhum registro excluído\");",
+                  "});",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "https://serverest.dev/usuarios/1234567890ABCDEF",
+              "protocol": "https",
+              "host": [
+                "serverest",
+                "dev"
+              ],
+              "path": [
+                "usuarios",
+                "1234567890ABCDEF"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cadastro com tipo de dado inválido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "",
+                  "const dados = pm.iterationData.toObject();",
+                  "",
+                  "pm.test(\"CT45 - Retornar 400 para tipo de dado inválido\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"CT46 - Validar erro do campo \" + dados.campo, function () {",
+                  "    const response = pm.response.json();",
+                  "",
+                  "    pm.expect(response).to.have.property(dados.campo);",
+                  "    pm.expect(response[dados.campo]).to.be.a(\"string\");",
+                  "",
+                  "    // Para nome, já confirmamos a mensagem exata",
+                  "    if (dados.mensagemEsperada) {",
+                  "        pm.expect(response[dados.campo]).to.eql(dados.mensagemEsperada);",
+                  "    }",
+                  "});",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "",
+                  "const dados = pm.iterationData.toObject();",
+                  "",
+                  "const body = {",
+                  "    nome: \"Usuario Teste QA\",",
+                  "    email: `qa.tipos.${Date.now()}@example.com`,",
+                  "    password: \"Teste@123\",",
+                  "    administrador: \"true\"",
+                  "};",
+                  "",
+                  "// Substitui apenas o campo que será testado",
+                  "if (dados.campo) {",
+                  "    body[dados.campo] = dados.valorInvalido;",
+                  "}",
+                  "",
+                  "pm.variables.set(\"requestBody\", JSON.stringify(body));",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{{requestBody}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://serverest.dev/usuarios",
+              "protocol": "https",
+              "host": [
+                "serverest",
+                "dev"
+              ],
+              "path": [
+                "usuarios"
+              ]
+            }
+          },
+          "response": []
         }
       ]
     },
@@ -478,6 +780,120 @@
               ],
               "path": [
                 "produtos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Acesso com token inválido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "",
+                  "pm.test(\"JWT10 - Bloquear acesso com token inválido\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "pm.test(\"JWT11 - Validar mensagem de token inválido\", function () {",
+                  "    const response = pm.response.json();",
+                  "",
+                  "    pm.expect(response.message).to.eql(",
+                  "        \"Token de acesso ausente, inválido, expirado ou usuário do token não existe mais\"",
+                  "    );",
+                  "});",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "token_invalido_123456",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Produto QA Token Invalido\",\n  \"preco\": 100,\n  \"descricao\": \"Teste de autenticacao\",\n  \"quantidade\": 10\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://serverest.dev/produtos",
+              "protocol": "https",
+              "host": [
+                "serverest",
+                "dev"
+              ],
+              "path": [
+                "produtos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login inválido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "",
+                  "pm.test(\"JWT12 - Bloquear login com credenciais inválidas\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "pm.test(\"JWT13 - Validar mensagem de credenciais inválidas\", function () {",
+                  "    const response = pm.response.json();",
+                  "",
+                  "    pm.expect(response.message).to.eql(\"Email e/ou senha inválidos\");",
+                  "});",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"usuario.inexistente.qa@example.com\",\n  \"password\": \"SenhaIncorreta123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://serverest.dev/login",
+              "protocol": "https",
+              "host": [
+                "serverest",
+                "dev"
+              ],
+              "path": [
+                "login"
               ]
             }
           },

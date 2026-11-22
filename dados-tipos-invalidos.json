@@ -1,0 +1,20 @@
+
+[
+  {
+    "campo": "nome",
+    "valorInvalido": 12345,
+    "mensagemEsperada": "nome deve ser uma string"
+  },
+  {
+    "campo": "email",
+    "valorInvalido": 12345
+  },
+  {
+    "campo": "password",
+    "valorInvalido": 12345
+  },
+  {
+    "campo": "administrador",
+    "valorInvalido": 12345
+  }
+]
