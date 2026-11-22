@@ -1,0 +1,43 @@
+
+[
+  {
+    "cenario": "Cadastro sem nome",
+    "body": {
+      "email": "qa.semnome@example.com",
+      "password": "Teste@123",
+      "administrador": "true"
+    },
+    "campoErro": "nome",
+    "mensagemErro": "nome é obrigatório"
+  },
+  {
+    "cenario": "Cadastro sem email",
+    "body": {
+      "nome": "Usuario QA",
+      "password": "Teste@123",
+      "administrador": "true"
+    },
+    "campoErro": "email",
+    "mensagemErro": "email é obrigatório"
+  },
+  {
+    "cenario": "Cadastro sem senha",
+    "body": {
+      "nome": "Usuario QA",
+      "email": "qa.semsenha@example.com",
+      "administrador": "true"
+    },
+    "campoErro": "password",
+    "mensagemErro": "password é obrigatório"
+  },
+  {
+    "cenario": "Cadastro sem administrador",
+    "body": {
+      "nome": "Usuario QA",
+      "email": "qa.semadmin@example.com",
+      "password": "Teste@123"
+    },
+    "campoErro": "administrador",
+    "mensagemErro": "administrador é obrigatório"
+  }
+]

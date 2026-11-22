@@ -1,0 +1,907 @@
+{
+  "info": {
+    "_postman_id": "2be5fc47-942e-4b33-baaa-21b87de98941",
+    "name": "postman-api-automation-tests",
+    "description": "### Welcome to Postman! This is your first collection. \n\nCollections are your starting point for building and testing APIs. You can use this one to:\n\n• Group related requests\n• Test your API in real-world scenarios\n• Document and share your requests\n\nUpdate the name and overview whenever you’re ready to make it yours.\n\n[Learn more about Postman Collections.](https://learning.postman.com/docs/collections/collections-overview/)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "60354841",
+    "_collection_link": "https://go.postman.co/collection/60354841-2be5fc47-942e-4b33-baaa-21b87de98941?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Cenários Negativos",
+      "item": [
+        {
+          "name": "Validações de cadastro",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "",
+                  "const cenario = pm.iterationData.get(\"cenario\");",
+                  "const campoErro = pm.iterationData.get(\"campoErro\");",
+                  "const mensagemErro = pm.iterationData.get(\"mensagemErro\");",
+                  "",
+                  "pm.test(`${cenario} - Status code 400`, function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(`${cenario} - Validar mensagem de erro`, function () {",
+                  "    const response = pm.response.json();",
+                  "",
+                  "    pm.expect(response[campoErro]).to.eql(mensagemErro);",
+                  "});",
+                  "",
+                  "pm.test(`${cenario} - Resposta deve ser JSON`, function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "",
+                  "const dados = pm.iterationData.toObject();",
+                  "",
+                  "if (dados.body) {",
+                  "    pm.variables.set(",
+                  "        \"requestBody\",",
+                  "        JSON.stringify(dados.body)",
+                  "    );",
+                  "}",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{{requestBody}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://serverest.dev/usuarios",
+              "protocol": "https",
+              "host": [
+                "serverest",
+                "dev"
+              ],
+              "path": [
+                "usuarios"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Email duplicado",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "",
+                  "const email = `qa.duplicado.${Date.now()}@example.com`;",
+                  "",
+                  "pm.variables.set(\"emailDuplicado\", email);",
+                  "",
+                  "pm.sendRequest({",
+                  "    url: \"https://serverest.dev/usuarios\",",
+                  "    method: \"POST\",",
+                  "    header: {",
+                  "        \"Content-Type\": \"application/json\"",
+                  "    },",
+                  "    body: {",
+                  "        mode: \"raw\",",
+                  "        raw: JSON.stringify({",
+                  "            nome: \"Usuario QA Original\",",
+                  "            email: email,",
+                  "            password: \"Teste@123\",",
+                  "            administrador: \"false\"",
+                  "        })",
+                  "    }",
+                  "}, function (err, res) {",
+                  "    if (err || !res || res.code !== 201) {",
+                  "        throw new Error(\"Falha ao preparar usuário original\");",
+                  "    }",
+                  "",
+                  "    const id = res.json()._id;",
+                  "    pm.variables.set(\"usuarioDuplicadoId\", id);",
+                  "});",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "",
+                  "pm.test(\"CT32 - Não permitir cadastro com email duplicado\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"CT33 - Validar mensagem de email duplicado\", function () {",
+                  "    const response = pm.response.json();",
+                  "",
+                  "    pm.expect(response.message).to.eql(",
+                  "        \"Este email já está sendo usado\"",
+                  "    );",
+                  "});",
+                  "",
+                  "pm.test(\"CT34 - Resposta deve ser JSON\", function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "// Limpeza do usuário criado no Pre-request",
+                  "const usuarioId = pm.variables.get(\"usuarioDuplicadoId\");",
+                  "",
+                  "if (usuarioId) {",
+                  "    pm.sendRequest({",
+                  "        url: `https://serverest.dev/usuarios/${usuarioId}`,",
+                  "        method: \"DELETE\"",
+                  "    }, function (err, res) {",
+                  "        pm.test(\"CT35 - Excluir usuário de preparação\", function () {",
+                  "            pm.expect(err).to.be.null;",
+                  "            pm.expect(res.code).to.eql(200);",
+                  "            pm.expect(res.json().message).to.eql(",
+                  "                \"Registro excluído com sucesso\"",
+                  "            );",
+                  "        });",
+                  "    });",
+                  "} else {",
+                  "    pm.test(\"CT35 - Usuário de preparação disponível\", function () {",
+                  "        pm.expect.fail(\"ID do usuário de preparação não encontrado\");",
+                  "    });",
+                  "}",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Usuario QA Duplicado\",\n  \"email\": \"{{emailDuplicado}}\",\n  \"password\": \"Teste@123\",\n  \"administrador\": \"false\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://serverest.dev/usuarios",
+              "protocol": "https",
+              "host": [
+                "serverest",
+                "dev"
+              ],
+              "path": [
+                "usuarios"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "JWT",
+      "item": [
+        {
+          "name": "Login válido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "",
+                  "pm.test(\"JWT01 - Login realizado com sucesso\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"JWT02 - Retornar token Bearer\", function () {",
+                  "    const response = pm.response.json();",
+                  "",
+                  "    pm.expect(response.authorization)",
+                  "        .to.be.a(\"string\")",
+                  "        .and.to.match(/^Bearer \\S+\\.\\S+\\.\\S+$/);",
+                  "});",
+                  "",
+                  "pm.test(\"JWT03 - Armazenar token\", function () {",
+                  "    const response = pm.response.json();",
+                  "",
+                  "   pm.collectionVariables.set(",
+                  "    \"authToken\",",
+                  "    response.authorization.replace(/^Bearer\\s+/i, \"\")",
+                  ");",
+                  "});",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "",
+                  "const email = `qa.jwt.${Date.now()}@example.com`;",
+                  "",
+                  "pm.collectionVariables.set(\"emailJWT\", email);",
+                  "",
+                  "pm.sendRequest({",
+                  "    url: \"https://serverest.dev/usuarios\",",
+                  "    method: \"POST\",",
+                  "    header: {",
+                  "        \"Content-Type\": \"application/json\"",
+                  "    },",
+                  "    body: {",
+                  "        mode: \"raw\",",
+                  "        raw: JSON.stringify({",
+                  "            nome: \"Usuario QA Autenticacao\",",
+                  "            email: email,",
+                  "            password: \"Teste@123\",",
+                  "            administrador: \"true\"",
+                  "        })",
+                  "    }",
+                  "}, function (err, res) {",
+                  "    pm.test(\"JWT00 - Preparar usuário para login\", function () {",
+                  "        pm.expect(err).to.be.null;",
+                  "        pm.expect(res.code).to.eql(201);",
+                  "    });",
+                  "",
+                  "    if (!err && res && res.code === 201) {",
+                  "        pm.collectionVariables.set(\"usuarioJWTId\", res.json()._id);",
+                  "    }",
+                  "});",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{emailJWT}}\",\n  \"password\": \"Teste@123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://serverest.dev/login",
+              "protocol": "https",
+              "host": [
+                "serverest",
+                "dev"
+              ],
+              "path": [
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Acesso sem token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "",
+                  "pm.test(\"JWT04 - Bloquear acesso sem token\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "",
+                  "pm.test(\"JWT05 - Validar mensagem de acesso não autorizado\", function () {",
+                  "    const response = pm.response.json();",
+                  "",
+                  "    pm.expect(response.message).to.eql(",
+                  "        \"Token de acesso ausente, inválido, expirado ou usuário do token não existe mais\"",
+                  "    );",
+                  "});",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Produto QA JWT\",\n  \"preco\": 100,\n  \"descricao\": \"Teste de autenticacao\",\n  \"quantidade\": 10\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://serverest.dev/produtos",
+              "protocol": "https",
+              "host": [
+                "serverest",
+                "dev"
+              ],
+              "path": [
+                "produtos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Acesso com token válido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "",
+                  "pm.test(\"JWT06 - Permitir acesso com token válido\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"JWT07 - Confirmar cadastro autorizado\", function () {",
+                  "    const response = pm.response.json();",
+                  "",
+                  "    pm.expect(response.message).to.eql(",
+                  "        \"Cadastro realizado com sucesso\"",
+                  "    );",
+                  "",
+                  "    pm.expect(response._id).to.be.a(\"string\").and.not.empty;",
+                  "});",
+                  "",
+                  "const produtoId = pm.response.json()._id;",
+                  "const token = pm.collectionVariables.get(\"authToken\");",
+                  "",
+                  "if (pm.response.code === 201 && produtoId && token) {",
+                  "    pm.sendRequest({",
+                  "        url: `https://serverest.dev/produtos/${produtoId}`,",
+                  "        method: \"DELETE\",",
+                  "        header: {",
+                  "            Authorization: `Bearer ${token}`",
+                  "        }",
+                  "    }, function (err, res) {",
+                  "        pm.test(\"JWT08 - Excluir produto criado no teste\", function () {",
+                  "            pm.expect(err).to.be.null;",
+                  "            pm.expect(res.code).to.eql(200);",
+                  "            pm.expect(res.json().message).to.eql(",
+                  "                \"Registro excluído com sucesso\"",
+                  "            );",
+                  "        });",
+                  "    });",
+                  "}",
+                  "",
+                  "const usuarioJWTId = pm.collectionVariables.get(\"usuarioJWTId\");",
+                  "",
+                  "if (usuarioJWTId) {",
+                  "    pm.sendRequest({",
+                  "        url: `https://serverest.dev/usuarios/${usuarioJWTId}`,",
+                  "        method: \"DELETE\"",
+                  "    }, function (err, res) {",
+                  "        pm.test(\"JWT09 - Excluir usuário de autenticação\", function () {",
+                  "            pm.expect(err).to.be.null;",
+                  "            pm.expect(res.code).to.eql(200);",
+                  "            pm.expect(res.json().message).to.eql(",
+                  "                \"Registro excluído com sucesso\"",
+                  "            );",
+                  "        });",
+                  "",
+                  "        if (!err && res && res.code === 200) {",
+                  "            pm.collectionVariables.unset(\"usuarioJWTId\");",
+                  "            pm.collectionVariables.unset(\"emailJWT\");",
+                  "            pm.collectionVariables.unset(\"authToken\");",
+                  "        }",
+                  "    });",
+                  "} else {",
+                  "    pm.test(\"JWT09 - Usuário de autenticação disponível\", function () {",
+                  "        pm.expect.fail(\"ID do usuário JWT não encontrado\");",
+                  "    });",
+                  "}",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Produto QA JWT {{$timestamp}}\",\n  \"preco\": 100,\n  \"descricao\": \"Teste de autenticacao\",\n  \"quantidade\": 10\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://serverest.dev/produtos",
+              "protocol": "https",
+              "host": [
+                "serverest",
+                "dev"
+              ],
+              "path": [
+                "produtos"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "CRUD",
+      "item": [
+        {
+          "name": "Criar usuário",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "",
+                  "pm.test(\"CT06 - Criar usuário com sucesso\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"CT07 - Resposta deve confirmar o cadastro\", function () {",
+                  "    const response = pm.response.json();",
+                  "",
+                  "    pm.expect(response.message).to.eql(\"Cadastro realizado com sucesso\");",
+                  "});",
+                  "",
+                  "pm.test(\"CT08 - Retorno deve conter ID do usuário\", function () {",
+                  "    const response = pm.response.json();",
+                  "",
+                  "    pm.expect(response._id).to.be.a(\"string\").and.not.empty;",
+                  "});",
+                  "",
+                  "pm.test(\"CT09 - Salvar ID para os próximos testes\", function () {",
+                  "    const response = pm.response.json();",
+                  "",
+                  "    pm.expect(response._id).to.be.a(\"string\").and.not.empty;",
+                  "",
+                  "    pm.collectionVariables.set(\"userId\", response._id);",
+                  "});",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "",
+                  "const email = `qa.jwt.${Date.now()}@example.com`;",
+                  "",
+                  "pm.collectionVariables.set(\"emailJWT\", email);",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "\n{\n  \"nome\": \"Usuario Teste QA\",\n  \"email\":  \"{{emailJWT}}\",\n  \"password\": \"Teste@123\",\n  \"administrador\": \"true\"\n}\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://serverest.dev/usuarios",
+              "protocol": "https",
+              "host": [
+                "serverest",
+                "dev"
+              ],
+              "path": [
+                "usuarios"
+              ]
+            },
+            "description": "This is a POST request, submitting data to an API via the request body. This request submits JSON data, and the data is reflected in the response.\n\nA successful POST request typically returns a `200 OK` or `201 Created` response code."
+          },
+          "response": []
+        },
+        {
+          "name": "Listar usuários",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "",
+                  "pm.test(\"CT01 - Status code deve ser 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"CT02 - Resposta deve ser JSON\", function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test(\"CT03 - Lista de usuários deve ser um array\", function () {",
+                  "    const response = pm.response.json();",
+                  "",
+                  "    pm.expect(response.usuarios).to.be.an(\"array\");",
+                  "});",
+                  "",
+                  "pm.test(\"CT04 - Quantidade deve corresponder à lista\", function () {",
+                  "    const response = pm.response.json();",
+                  "",
+                  "    pm.expect(response.quantidade).to.eql(response.usuarios.length);",
+                  "});",
+                  "",
+                  "pm.test(\"CT05 - Usuários devem possuir os campos obrigatórios\", function () {",
+                  "    const response = pm.response.json();",
+                  "",
+                  "    response.usuarios.forEach((usuario) => {",
+                  "        pm.expect(usuario).to.have.all.keys(",
+                  "            \"nome\",",
+                  "            \"email\",",
+                  "            \"password\",",
+                  "            \"administrador\",",
+                  "            \"_id\"",
+                  "        );",
+                  "    });",
+                  "});",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://serverest.dev/usuarios",
+              "protocol": "https",
+              "host": [
+                "serverest",
+                "dev"
+              ],
+              "path": [
+                "usuarios"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Atualizar usuário",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "",
+                  "pm.test(\"CT15 - Atualizar usuário com sucesso\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"CT16 - Validar mensagem de atualização\", function () {",
+                  "    const response = pm.response.json();",
+                  "",
+                  "    pm.expect(response.message).to.eql(",
+                  "        \"Registro alterado com sucesso\"",
+                  "    );",
+                  "});",
+                  "",
+                  "pm.test(\"CT17 - Validar formato JSON da resposta\", function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "",
+                  "const timestamp = Date.now();",
+                  "",
+                  "pm.collectionVariables.set(\"nomeAtualizado\", \"Usuario QA \" + timestamp);",
+                  "pm.collectionVariables.set(\"emailAtualizado\", `qa.${timestamp}@example.com`);",
+                  "pm.collectionVariables.set(\"senhaAtualizada\", \"Senha@\" + timestamp);",
+                  "pm.collectionVariables.set(\"administradorAtualizado\", \"false\");",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "\n{\n  \"nome\": \"{{nomeAtualizado}}\",\n  \"email\": \"{{emailAtualizado}}\",\n  \"password\": \"{{senhaAtualizada}}\",\n  \"administrador\": \"{{administradorAtualizado}}\"\n}\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://serverest.dev/usuarios/{{userId}}",
+              "protocol": "https",
+              "host": [
+                "serverest",
+                "dev"
+              ],
+              "path": [
+                "usuarios",
+                "{{userId}}"
+              ]
+            },
+            "description": "This is a GET request and it is used to \"get\" data from an endpoint. There is no request body for a GET request, but you can use query parameters to help specify the resource you want data on (e.g., in this request, we have `id=1`).\n\nA successful GET response will have a `200 OK` status, and should include some kind of response body - for example, HTML web content or JSON data."
+          },
+          "response": []
+        },
+        {
+          "name": "Validar atualização",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "",
+                  "const response = pm.response.json();",
+                  "",
+                  "pm.test(\"CT18 - Consultar usuário atualizado com sucesso\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"CT19 - Validar nome atualizado\", function () {",
+                  "    pm.expect(response.nome).to.eql(",
+                  "        pm.collectionVariables.get(\"nomeAtualizado\")",
+                  "    );",
+                  "});",
+                  "",
+                  "pm.test(\"CT20 - Validar email atualizado\", function () {",
+                  "    pm.expect(response.email).to.eql(",
+                  "        pm.collectionVariables.get(\"emailAtualizado\")",
+                  "    );",
+                  "});",
+                  "",
+                  "pm.test(\"CT21 - Validar senha atualizada\", function () {",
+                  "    pm.expect(response.password).to.eql(",
+                  "        pm.collectionVariables.get(\"senhaAtualizada\")",
+                  "    );",
+                  "});",
+                  "",
+                  "pm.test(\"CT22 - Validar perfil de administrador\", function () {",
+                  "    pm.expect(response.administrador).to.eql(",
+                  "        pm.collectionVariables.get(\"administradorAtualizado\")",
+                  "    );",
+                  "});",
+                  "",
+                  "pm.test(\"CT23 - Validar ID do usuário\", function () {",
+                  "    pm.expect(response._id).to.eql(",
+                  "        pm.collectionVariables.get(\"userId\")",
+                  "    );",
+                  "});",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://serverest.dev/usuarios/{{userId}}",
+              "protocol": "https",
+              "host": [
+                "serverest",
+                "dev"
+              ],
+              "path": [
+                "usuarios",
+                "{{userId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Excluir usuário",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "",
+                  "pm.test(\"CT24 - Excluir usuário com sucesso\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"CT25 - Validar mensagem de exclusão\", function () {",
+                  "    const response = pm.response.json();",
+                  "",
+                  "    pm.expect(response.message).to.eql(",
+                  "        \"Registro excluído com sucesso\"",
+                  "    );",
+                  "});",
+                  "",
+                  "pm.test(\"CT26 - Validar formato JSON da resposta\", function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "https://serverest.dev/usuarios/{{userId}}",
+              "protocol": "https",
+              "host": [
+                "serverest",
+                "dev"
+              ],
+              "path": [
+                "usuarios",
+                "{{userId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Validar exclusão",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "",
+                  "pm.test(\"CT27 - Consultar usuário excluído deve retornar 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"CT28 - Validar mensagem de usuário não encontrado\", function () {",
+                  "    const response = pm.response.json();",
+                  "",
+                  "    pm.expect(response.message).to.eql(",
+                  "        \"Usuário não encontrado\"",
+                  "    );",
+                  "});",
+                  "",
+                  "pm.test(\"CT29 - Validar resposta JSON\", function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://serverest.dev/usuarios/{{userId}}",
+              "protocol": "https",
+              "host": [
+                "serverest",
+                "dev"
+              ],
+              "path": [
+                "usuarios",
+                "{{userId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "userId",
+      "value": ""
+    },
+    {
+      "key": "nomeAtualizado",
+      "value": ""
+    },
+    {
+      "key": "emailAtualizado",
+      "value": ""
+    },
+    {
+      "key": "senhaAtualizada",
+      "value": ""
+    },
+    {
+      "key": "administradorAtualizado",
+      "value": ""
+    }
+  ]
+}

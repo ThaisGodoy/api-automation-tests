@@ -1,0 +1,67 @@
+name: Testes Automatizados de API
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  api-tests:
+    name: Executar testes com Newman
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Criar pasta de relatórios
+        run: mkdir -p reports
+
+      - name: Executar testes CRUD
+        run: |
+          npx newman run postman-api-automation-tests.postman_collection.json \
+            --folder "CRUD" \
+            -r cli,htmlextra \
+            --reporter-htmlextra-export reports/crud.html
+
+      - name: Executar testes JWT
+        if: success() || failure()
+        run: |
+          npx newman run postman-api-automation-tests.postman_collection.json \
+            --folder "JWT" \
+            -r cli,htmlextra \
+            --reporter-htmlextra-export reports/jwt.html
+
+      - name: Executar cenários negativos
+        if: success() || failure()
+        run: |
+          npx newman run postman-api-automation-tests.postman_collection.json \
+            --folder "Validações de cadastro" \
+            --iteration-data dados-cadastro-negativo.json \
+            -r cli,htmlextra \
+            --reporter-htmlextra-export reports/cadastro-negativo.html
+
+      - name: Executar teste de e-mail duplicado
+        if: success() || failure()
+        run: |
+          npx newman run postman-api-automation-tests.postman_collection.json \
+            --folder "Email duplicado" \
+            -r cli,htmlextra \
+            --reporter-htmlextra-export reports/email-duplicado.html
+
+      - name: Publicar relatórios HTML
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: relatorios-testes-api
+          path: reports/
+          if-no-files-found: warn
